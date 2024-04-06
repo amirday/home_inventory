@@ -1,0 +1,117 @@
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+	<div class="row">
+		<div class="col-md-10 col-12 mx-auto mt-5">
+			{% if not is_shopping_list %}
+				<div class="row">
+					<div class="d-flex justify-content-between align-items-center">
+						<div class="flex-grow-1 mr-2">
+							<form id="categoryForm" method="get" data-base-url="{% url 'shopping_list' 'placeholder' %}">
+								<label for="categorySelect" style="font-size: 1.2em;">Generate Shopping List:</label>
+								<select id="categorySelect" name="category" style="font-size: 1.2em; padding: 0.5em; border-radius: 5px; border: 1px solid #ccc;">
+									<option value="">Select a category</option>
+									{% for category in all_categories %}
+										<option value="{{ category.name }}">{{ category.name }}</option>
+									{% endfor %}
+								</select>
+							</form>
+						</div>
+						<div class="flex-grow-1 mr-2">
+							<input type="text" id="search" placeholder="Search items..." style="font-size: 1.2em; padding: 0.5em; border-radius: 5px; border: 1px solid #ccc;">
+						</div>
+						<div class="ml-auto">
+							<a href="{% url 'add-item' %}" class="btn btn-primary">+</a>
+						</div>
+					</div>
+			
+				<script>
+					document.getElementById('categorySelect').addEventListener('change', function() {
+						var selectedCategory = this.value;
+						var form = document.getElementById('categoryForm');
+						var baseUrl = form.getAttribute('data-base-url');
+						form.action = baseUrl.replace('placeholder', selectedCategory);
+						form.submit();
+					});
+				</script>
+
+<script>
+	document.getElementById('search').addEventListener('input', function() {
+		var searchQuery = this.value.toLowerCase();
+		var itemRows = document.getElementsByClassName('item-row');
+	
+		for (var i = 0; i < itemRows.length; i++) {
+			var itemName = itemRows[i].getAttribute('data-item-name').toLowerCase();
+	
+			if (itemName.includes(searchQuery)) {
+				itemRows[i].style.display = '';
+			} else {
+				itemRows[i].style.display = 'none';
+			}
+		}
+	});
+	</script>
+			{% endif %}
+
+
+			<table class="table table-hover table-striped">
+				<thead>
+					<tr>
+						<th scope="col">Name</th>
+						<th scope="col">Qty</th>
+						<th scope="col">Units</th>
+						<th scope="col">Category</th>
+						<th scope="col">Empty</th>
+						<th scope="col">Fullfil</th>
+						{% if not is_shopping_list %}
+							<th scope="col">Edit</th>
+							<th scope="col">Delete</th>
+						{% endif %}
+					</tr>
+				</thead>
+				<tbody>
+					{% if items|length == 0 %}
+					<tr>
+						<th scope="row">-</th>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+						{% if not is_shopping_list %}
+							<td>-</td>
+							<td>-</td>
+						{% endif %}
+						<td></td>
+					</tr>
+					{% endif %}
+
+					{% for item in items %}
+					<tr class="item-row" data-item-name="{{ item.name }}">
+						<th scope="row">{{ item.name }}</th>
+						<th>
+							{% if item.image %}
+							<img src="{{ item.image.url }}" alt="{{ item.name }}">
+						{% else %}
+							<p>No image available</p>
+						{% endif %}
+						</th>
+						{% if item.id in low_inventory_ids %}
+							<td class="text-danger">{{item.quantity}} / {{item.desired_quantity}}</td>
+						{% else %}
+							<td class="text-success">{{item.quantity}} / {{item.desired_quantity}}</td>
+						{% endif %}
+						<td>{{ item.units.name }}</td>
+						<td>{{ item.category.name }}</td>
+						<td><a href="#" class="empty-item" data-item-id="{{ item.id }}"><i class="fas fa-times"></i></a></td>
+						<td><a href="#" class="fullfil-item" data-item-id="{{ item.id }}"><i class="fas fa-check"></i></a></td>
+						{% if not is_shopping_list %}
+							<td><a href="{% url 'edit-item' item.id %}"><i class="fas fa-pencil-alt"></i></a></td>
+							<td><a href="{% url 'delete-item' item.id %}"><i class="fas fa-trash"></i></a></td>
+						{% endif %}
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+{% endblock content %}

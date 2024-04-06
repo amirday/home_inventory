@@ -1,0 +1,5 @@
+.venv/*
+*.pyc
+*migrations*
+*.sqlite3
+inventory_images/*

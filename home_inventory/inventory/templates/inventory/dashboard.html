@@ -1,0 +1,115 @@
+{% extends 'inventory/base.html' %}
+{% block content %}
+	<div class="row">
+		<div class="col-md-10 col-12 mx-auto mt-5">
+			{% if not is_shopping_list %}
+            <div class="row">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                    <div class="col-12 col-md flex-grow-1 mr-2 mt-2 mt-md-0 d-flex">
+                        <input type="text" id="search" placeholder="Search items..." style="font-size: 1.2em; padding: 0.5em; border-radius: 5px; border: 1px solid #ccc;">
+                        <a id="add-item-button" href="{% url 'add-item' %}" class="btn btn-primary ml-auto">+</a>
+                    </div>
+                    <div class="col-12 col-md flex-grow-1 mr-2">
+                        <form id="categoryForm" method="get" data-base-url="{% url 'shopping_list' 'placeholder' %}">
+                            <label for="categorySelect" style="font-size: 1.2em;">Shopping List:</label>
+                            <select id="categorySelect" name="category" style="font-size: 1.2em; padding: 0.5em; border-radius: 5px; border: 1px solid #ccc;">
+                                <option value="">Select a category</option>
+                                {% for category in all_categories %}
+                                    <option value="{{ category.name }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <script>
+                document.getElementById('search').addEventListener('input', function(e) {
+                    var searchQuery = e.target.value;
+                    var addButton = document.getElementById('add-item-button');
+                    addButton.href = "{% url 'add-item' %}?name=" + encodeURIComponent(searchQuery);
+                });
+            </script>
+				<script>
+					document.getElementById('categorySelect').addEventListener('change', function() {
+						var selectedCategory = this.value;
+						var form = document.getElementById('categoryForm');
+						var baseUrl = form.getAttribute('data-base-url');
+						form.action = baseUrl.replace('placeholder', selectedCategory);
+						form.submit();
+					});
+				</script>
+
+                <script>
+                    document.getElementById('search').addEventListener('input', function() {
+                        var searchQuery = this.value.toLowerCase();
+                        var itemRows = document.getElementsByClassName('item-row');
+                    
+                        for (var i = 0; i < itemRows.length; i++) {
+                            var itemName = itemRows[i].getAttribute('data-item-name').toLowerCase();
+                    
+                            if (itemName.includes(searchQuery)) {
+                                itemRows[i].style.display = '';
+                            } else {
+                                itemRows[i].style.display = 'none';
+                            }
+                        }
+                    });
+                    </script>
+			{% endif %}
+				<tbody>
+                    {% for item in items %}
+                    <div class="col-md-12">
+                        <div class="card mb-4 box-shadow item-row" data-item-name="{{ item.name }}">
+                            <div class="row no-gutters">
+                                <div class="col-md-4">
+                                    {% if item.image %}
+                                        <img src="{{ item.image.url }}" class="card-img" alt="{{ item.name }}">
+                                    {% else %}
+                                        <div style="background-color: gray; height: 100%; width: 100%;"></div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="card-body d-flex flex-column" style="height: 100%;">
+                                        <div class="row flex-grow-1">
+                                            <div class="col-6">
+                                                <h5 class="card-title">{{ item.name }}</h5>
+                                            </div>
+                                            <div class="col-6">
+                                                <h5 class="card-text">{{ item.category.name }}</h5>
+                                            </div>
+                                        </div>
+                                        <div class="row flex-grow-1">
+                                            <div class="col-12 text-left">
+                                                <p class="card-text">
+                                                    {% if item.id in low_inventory_ids %}
+                                                        <span class="text-danger">{{item.quantity}} / {{item.desired_quantity}}</span>
+                                                    {% else %}
+                                                        <span class="text-success">{{item.quantity}} / {{item.desired_quantity}}</span>
+                                                    {% endif %}
+                                                    {{ item.units.name }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-auto">
+                                            <div class="col-12">
+                                                <div class="btn-group w-100 h-100">
+                                                    <td><a href="#" class="empty-item btn btn-block" data-item-id="{{ item.id }}"><i class="fas fa-times"></i></a></td>
+                                                    <td><a href="#" class="fullfil-item btn btn-block" data-item-id="{{ item.id }}"><i class="fas fa-check"></i></a></td>
+                                                    {% if not is_shopping_list %}
+                                                        <td><a href="{% url 'edit-item' item.id %}" class="btn btn-block"><i class="fas fa-pencil-alt"></i></a></td>
+                                                        <td><a href="{% url 'delete-item' item.id %}" class="btn btn-block"><i class="fas fa-trash"></i></a></td>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+				</tbody>
+			<!-- </table> -->
+		</div>
+	</div>
+{% endblock content %}
